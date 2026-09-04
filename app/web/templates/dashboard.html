@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI Code Review Agent — Runs</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f8; --card: #ffffff; --border: #e2e2e6;
+    --text: #1a1a1e; --muted: #6b6b74;
+    --queued: #6b6b74; --running: #2563eb; --completed: #16a34a; --failed: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #16161a; --card: #1f1f24; --border: #303038; --text: #f0f0f2; --muted: #9a9aa2; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  header {
+    padding: 20px 28px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  header h1 { font-size: 18px; margin: 0; }
+  header span { color: var(--muted); font-size: 13px; }
+  main { padding: 20px 28px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .03em; }
+  tr:last-child td { border-bottom: none; }
+  a { color: inherit; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    color: #fff;
+  }
+  .badge.queued { background: var(--queued); }
+  .badge.running { background: var(--running); }
+  .badge.completed { background: var(--completed); }
+  .badge.failed { background: var(--failed); }
+  .empty { color: var(--muted); padding: 40px; text-align: center; }
+  .findings { color: var(--muted); max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Review runs</h1>
+  <span id="status">loading…</span>
+</header>
+<main>
+  <table id="table" hidden>
+    <thead>
+      <tr>
+        <th>ID</th><th>Repo</th><th>PR</th><th>Action</th><th>Status</th>
+        <th>Findings</th><th>Fix PR</th><th>Created</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div class="empty" id="empty" hidden>No runs yet — open or update a PR on the watched repo.</div>
+</main>
+<script>
+  const rowsEl = document.getElementById('rows');
+  const tableEl = document.getElementById('table');
+  const emptyEl = document.getElementById('empty');
+  const statusEl = document.getElementById('status');
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function fmtTime(iso) {
+    try { return new Date(iso).toLocaleString(); } catch { return iso; }
+  }
+
+  async function refresh() {
+    try {
+      const res = await fetch('/runs?limit=100');
+      if (!res.ok) throw new Error(res.status);
+      const runs = await res.json();
+      statusEl.textContent = `${runs.length} run${runs.length === 1 ? '' : 's'} · updated ${new Date().toLocaleTimeString()}`;
+
+      if (runs.length === 0) {
+        tableEl.hidden = true; emptyEl.hidden = false; return;
+      }
+      tableEl.hidden = false; emptyEl.hidden = true;
+
+      rowsEl.innerHTML = runs.map(r => `
+        <tr>
+          <td>${r.id}</td>
+          <td>${esc(r.repo)}</td>
+          <td><a href="${esc(r.pr_url)}" target="_blank" rel="noopener">#${r.pr_number} ${esc(r.pr_title)}</a></td>
+          <td>${esc(r.action)}</td>
+          <td><span class="badge ${esc(r.status)}">${esc(r.status)}</span></td>
+          <td class="findings">${r.findings ? esc(JSON.stringify(r.findings)) : (r.error ? esc(r.error) : '—')}</td>
+          <td>${r.fix_pr_url ? `<a href="${esc(r.fix_pr_url)}" target="_blank" rel="noopener">view</a>` : '—'}</td>
+          <td>${fmtTime(r.created_at)}</td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      statusEl.textContent = `couldn't load runs (${e.message})`;
+    }
+  }
+
+  refresh();
+  setInterval(refresh, 4000);
+</script>
+</body>
+</html>

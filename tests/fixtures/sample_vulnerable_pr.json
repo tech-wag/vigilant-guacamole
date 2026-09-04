@@ -1,0 +1,17 @@
+{
+  "action": "opened",
+  "number": 42,
+  "pull_request": {
+    "number": 42,
+    "title": "Add user lookup endpoint",
+    "html_url": "https://github.com/your-username/ai-code-review-agent-demo/pull/42",
+    "draft": false,
+    "head": { "ref": "feature/user-lookup", "sha": "abc123def456" },
+    "base": { "ref": "main", "sha": "000111222333" }
+  },
+  "repository": {
+    "full_name": "your-username/ai-code-review-agent-demo",
+    "name": "ai-code-review-agent-demo",
+    "owner": { "login": "your-username" }
+  }
+}
