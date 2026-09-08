@@ -4,6 +4,12 @@ Connects to GitHub PRs, runs parallel Security / Performance / Test-coverage
 review agents (Claude + LangGraph), and opens a second PR with the actual
 fix applied — no back-and-forth comments.
 
+## Demo
+
+[![Watch the demo](https://img.youtube.com/vi/v0oplYJfN08/hqdefault.jpg)](https://youtube.com/shorts/v0oplYJfN08)
+
+See it end-to-end: a vulnerable PR comes in → the review agents flag it → a fix PR appears automatically. Full clip also on [Instagram](https://www.instagram.com/tech.wag/reel/Dc-bSFuhz7Q/).
+
 ## Status
 
 | Step | What | State |
@@ -272,5 +278,3 @@ this beyond a demo:
   large file this costs more tokens than a targeted diff and risks hitting
   `max_tokens` (8192) on the response; fine for the demo's small target
   files, worth revisiting before pointing this at a large real codebase.
-- **No `.gitignore` yet** and the project isn't a git repo — before
-  initializing one, exclude `.venv/`, `.env`, `runs.db`, and `__pycache__/`.
